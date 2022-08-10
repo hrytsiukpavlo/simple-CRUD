@@ -1,8 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const express = require('express');
-const morgan = require('morgan')
-const app = express();
+
 
 function createFile(req, res, next) {
   if (!req.body.content || !req.body.filename) {
@@ -79,27 +77,22 @@ const getFile = (req, res, next) => {
 }
 
 function deleteFile(req, res, next) {
-  if (!req.params.filename) {
-    res.status(400).send({
-      "message": "Specify filename"
+  if (fs.existsSync(`files/${req.params.filename}`)) {
+    fs.unlink(`files/${req.params.filename}`, function (err) {
+      if (err) {
+        throw err;
+      }
+    });
+    console.log('File deleted!');
+    res.status(200).send({
+      "message": `File ${req.params.filename} successfully deleted`
     })
   } else {
-    if (fs.existsSync(`files/${req.params.filename}`)) {
-      fs.unlink(`files/${req.params.filename}`, function (err) {
-        if (err) {
-          throw err;
-        }
-      });
-      console.log('File deleted!');
-      res.status(200).send({
-        "message": `File ${req.params.filename} successfully deleted`
-      })
-    } else {
-      res.status(400).send({
-        "message": `No such file`
-      })
-    }
+    res.status(400).send({
+      "message": `No such file`
+    })
   }
+
 }
 
 function putFile(req, res, next) {
@@ -123,10 +116,17 @@ function putFile(req, res, next) {
   }
 }
 
+function deleteNothing(req, res, next) {
+  res.status(400).send({
+    "message": "You should specify a filename in the request if you want to delete a file"
+  })
+}
+
 module.exports = {
   createFile,
   getFiles,
   getFile,
   deleteFile,
-  putFile
+  putFile,
+  deleteNothing
 }
